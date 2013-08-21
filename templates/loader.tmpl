@@ -1,0 +1,43 @@
+function SetCookie_kd(name, value, days)
+{
+     var expire = new Date ();
+     var domain = window.location.hostname.split(".");
+     expire.setTime (expire.getTime() + (24 * 60 * 60 * 1000) * days);
+     //document.cookie = name + "=" + escape(value) + "; domain=." + domain[domain.length - 2] + "." + domain[domain.length - 1] + "; expires=" + expire.toGMTString();
+     var path = "/";
+     document.cookie = name + "=" + escape(value) + "; domain=." + domain[domain.length - 2] + "." + domain[domain.length - 1] + "; path=" +path+ "; expires=" + expire.toGMTString();
+
+
+}
+
+function exec(url)
+{
+	console.log("coucou");
+    var _href    =window.location.protocol +  "//" + window.location.hostname  + window.location.pathname,
+	param       = window.location.search.slice(1,window.location.search.length),            
+    //_uid       = GetID_kd(),
+	_cookie_disabled = 0,
+    _laptop     = navigator.userAgent,
+    _screen_d   = escape (window.screen.width + 'x' + window.screen.height), 
+    _scrdepth   = window.screen.colorDepth, 
+    //_annonceur  = escape(ann),
+    //_tgid       = escape(name),
+        _tghref     = 'http://{{.domain}}/tag',
+   //     _ckie_ctid  = GetCookie_kd(_ckie_name),
+        _appcodename = escape(navigator.appCodeName),
+        _appname    = escape(navigator.appName),
+        _appversion = escape(navigator.appVersion),                 
+        _platform   = escape(navigator.platform),
+        _java       = escape(navigator.javaEnabled());
+
+
+		var _contents_end = "blahblahblah"
+			var imageElt3 = document.createElement("img");
+            imageElt3.id = "tc_img_4_1";
+            imageElt3.src =_tghref+"?id=llll&href="+_href+"&ckie="+_cookie_disabled+ _contents_end  
+            imageElt3.border = "0";
+            imageElt3.height = "0";
+            imageElt3.width = "0";
+            document.body.appendChild(imageElt3);
+	
+}
