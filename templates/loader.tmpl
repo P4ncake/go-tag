@@ -3,187 +3,134 @@
  */
 
 /**
- * alias d'escape
- * @param string data
- * @returns
- * Escaped string (escaped && sans '/')
+ * Global vars
  */
-function real_escape(data)
-{
-    var url_reg = new RegExp("(/)", "g");
-    return escape(data).replace(url_reg, '%2F');
+var domain_site = window.location.hostname
+var domain = "{{.domain}}"
+
+function gotag_setcookie(name,value,days,path,domain) {
+	domain = domain.split(".");
+	var	domain_name = domain[domain.length - 2]
+	var domain_ext = domain[domain.length - 1]
+	var expire = new Date();
+	expire.setTime (expire.getTime() + (24 * 60 * 60 * 1000) * days);
+	
+	document.cookie = 	name + "=" + escape(value) +
+						"; domain=." + domain_name + "." + domain_ext +
+						"; expires=" + expire.toGMTString() +
+						"; path=" + path;
 }
 
-/**
- * Do not modify what's following.
- */
-
-function SetCookie_kd(name, value, days)
-{
-     var expire = new Date ();
-     var domain = window.location.hostname.split(".");
-     expire.setTime (expire.getTime() + (24 * 60 * 60 * 1000) * days);
-     document.cookie = name + "=" + escape(value) + "; domain=." + domain[domain.length - 2] + "." + domain[domain.length - 1] + "; expires=" + expire.toGMTString();
+function gotag_getcookie(name) {
+	var startIndex = document.cookie.indexOf(name);
+	if(startIndex == -1)
+		return null;
+	else {
+		var endIndex = document.cookie.indexOf(";", startIndex);
+		if (endIndex == -1)
+			endIndex = document.cookie.length;
+		return unescape(document.cookie.substring(startIndex+name.length+1, endIndex)); 
+	}
 }
 
-function GetCookie_kd(name)
-{
-     var startIndex = document.cookie.indexOf(name);
-     if (startIndex != -1)
-     {
-          var endIndex = document.cookie.indexOf(";", startIndex);
-          if (endIndex == -1)
-          {
-              endIndex = document.cookie.length;
-          }
-          return unescape(document.cookie.substring(startIndex+name.length+1, endIndex));
-     }
-     else
-     {
-          return null;
-     }
+function gotag_genid() {
+	var reg = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
+	var radix = reg.length;
+	var date = new Date();
+	var id = date.getTime().toString();
+	
+	for (var i = 0 ; i < 16 ; i++) {
+		id = id + reg[0 | Math.random()*radix];
+	}
+	return id;
 }
 
-function GetID_kd()
-{
-    var     CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(''),
-            chars = CHARS,
-            radix = 62,
-            date = new Date(),
-            uuid = date.getTime().toString();
-    for (var i = 0; i < 16; i++)
-    {
-        uuid = uuid + chars[0 | Math.random()*radix];
-    }
-    return uuid;
+function gotag_contents(url, annonceur, name, Varray) {
+	var _cookie_name ='{{.prefix}}{{.name}}';
+	var _id = _id2 = _date = _mime_types =_plugins = new String();
+
+	var _href = window.location.protocol + "//" + domain_site + window.location.pathname;
+	var params = window.location.search.slice(1,window.location.search.length);
+	var _tmpid = gotag_genid();
+	var _cookie_disabled = false;
+	var _laptop = navigator.userAgent;
+	var _screen_d = escape(window.screen.width + 'x' + window.screen.height);
+	var _scrdepth   = window.screen.colorDepth;
+	var _tag_name = name;
+	var _annonceur = annonceur;
+	var _tag_href = 'http://' + domain + '/' + url;
+	var _cookie_id = gotag_getcookie(_cookie_name);
+	var _appcodename = escape(navigator.appCodeName);
+	var _appname    = escape(navigator.appName);
+	var _appversion = escape(navigator.appVersion);
+	var _platform   = escape(navigator.platform);
+	var _java       = escape(navigator.javaEnabled());
+	
+
+	// pk faire un try catch avec nav lang ??? 
+	var	_applang = escape(navigator.language);
+
+	// Idem pour les mime_types
+	for (var i = 0 ; i < navigator.mimeTypes.length; i++) {
+		if (i!=0) {
+			_mime_types += ';';
+		}
+		_mime_types += navigator.mimeTypes[i].type;
+	}
+	
+	// Et les plugins 
+	for (var i = 0 ; i < navigator.plugins.length; i++) {
+		if (i!=0) {
+			_plugins += ';';
+		}
+		_plugins += navigator.plugins[i].name + ':' + navigator.plugins[i].filename;
+	}
+
+	var _contents_end = "&ann="+_annonceur+"&screend="+_screen_d+"&scrdepth="+_scrdepth+"&laptop="+_laptop + '&appcodename=' + _appcodename + '&appname=' + _appname + '&applang=' + _applang +'&appversion=' + _appversion + '&java=' + _java + '&platform=' + _platform + '&plugins=' + _plugins +'&mimes=' + _mime_types;
+
+	// A valider la necessité du if suivant 
+	if (_contents_end.length > 7000)
+        _contents_end =  _contents_end.substring(0, 7000);
+	
+	var params_list = params.split("&");
+	for (var i = 0 ; i < params_list.length; i++) {
+		params_value = params_list[i].split("=");
+		key = params_value[0];
+		value = params_value[1];
+		
+		if(key == "_id") {
+			_id = value;
+		}
+		if(key == "_id2") {
+			_id2 = value;
+		}
+	}
+
+
+	if(_id.length == 0) {
+		if(_cookie_id == null) {
+			_cookie_id = '';
+			_id = _tmpid;
+			gotag_setcookie(_cookie_name,_id,360,"/",domain_site);
+			if(gotag_getcookie(_cookie_name) == null) {
+				_cookie_disabled == true;
+			}
+		} else {
+			_id = _cookie_id;
+		}
+	} else {
+		gotag_setcookie(_cookie_name,_id,360,"/",domain_site);
+		if(gotag_getcookie(_cookie_name) == null) {
+			_cookie_disabled == true;
+		}
+		
+		// Img d'appel du tag
+
+		var custom_vars = Varray.join("&");
+		var gotag_img = document.createElement("img");
+			gotag_img.id = "gotag_img_1_1";
+			gotag_img.src = _tag_href + "?id="+_id+"&id2"+_id2+"&href="+_href+"&cookie_id="+_cookie_id+"&cookie="+_cookie_disabled+_contents_end+custom_vars;
+			gotag_img.border = gotag_img.height = gotag_img.width = "0";
+			document.body.appendChild(gotag_img);
+	}
 }
-
-function Contents_kd(url, ann, name, Varray)
-{       
-    var _ckie_name  = 'kdtck_' + ann.split('_')[0];
-
-    var _ctid       = new String(),
-        _emid       = new String(),
-        _t          = new String(),
-        _mime_types = new String(),
-        _plugins    = new String();
-    
-    var _href       = real_escape(window.location.protocol +  "//" + window.location.hostname  + window.location.pathname),
-        param       = window.location.search.slice(1,window.location.search.length),            
-        _uuid       = GetID_kd(),
-        _cookie_disabled = 0,
-        _laptop     = real_escape(navigator.userAgent),
-        _screen_d   = escape (window.screen.width + 'x' + window.screen.height), 
-        _scrdepth   = window.screen.colorDepth, 
-        _annonceur  = escape(ann),
-        _tgid       = escape(name),
-        _tghref     = 'http://{{.domain}}:9090/' + url,
-        _ckie_ctid  = GetCookie_kd(_ckie_name),
-        _appcodename = escape(navigator.appCodeName),
-        _appname    = escape(navigator.appName),
-        _appversion = escape(navigator.appVersion),                 
-        _platform   = escape(navigator.platform),
-        _java       = escape(navigator.javaEnabled());
-        
-    try 
-    {       
-        _applang = escape(navigator.language);      
-    }
-    catch (e) 
-    {   
-        _applang = 'undefined';     
-    }
-    
-    try
-    {
-        _mime_types = navigator.mimeTypes[0].type;
-        for(var i = 1; i < navigator.mimeTypes.length; i++) 
-            _mime_types += ';' + navigator.mimeTypes[i].type;
-        _mime_types = real_escape(_mime_types);
-    }
-    catch(e)
-    {
-        _mime_types = 'undefined';
-    }
-        
-    try
-    {
-        _plugins    = navigator.plugins[0].name + ':' + navigator.plugins[0].filename;
-        for(var i = 1; i < navigator.plugins.length; i++) 
-            _plugins += ';' + navigator.plugins[i].name + ':' + navigator.plugins[i].filename;
-        _plugins = real_escape(_plugins);
-    }
-    catch (e)
-    {
-        _plugins = 'undefined';
-    }
-
-    var timestamp   = new Date(),
-    _M              = timestamp.getMonth() + 1,
-    _d              = timestamp.getDate(),
-    _h              = timestamp.getHours(),
-    _m              = timestamp.getMinutes(),
-    _s              = timestamp.getSeconds();
-    
-    _t += timestamp.getFullYear().toString() + '-' + (_M < 10 ?"0" + _M.toString():_M.toString()) + '-' + (_d < 10 ?"0" + _d.toString():_d.toString()) + ' ';   
-    _t += (_h < 10?'0' + _h.toString():_h.toString()) + ':' + (_m < 10 ?"0" + _m.toString():_m.toString())+ ':' + (_s < 10 ?"0" + _s.toString():_s.toString());
-    _t = escape(_t);    
-    first = param.split("&");
-    
-    var _contents_end = "&ann="+_annonceur+"&screend="+_screen_d+"&scrdepth="+_scrdepth+"&laptop="+_laptop + '&appcodename=' + _appcodename + '&appname=' + _appname + '&applang=' + _applang +'&appversion=' + _appversion + '&java=' + _java + '&platform=' + _platform + '&plugins=' + _plugins +'&mimes=' + _mime_types;
-    if (_contents_end.length > 7000)
-        _contents_end =  _contents_end.substring(0, 7000);      
-    for(var i = 0; i < first.length; i++)
-    {
-        second = first[i].split("=");
-        if (second[0] == "_ctid")
-        {
-            _ctid = second[1];
-        }
-        if (second[0] == "_emid")
-        {
-            _emid = second[1];
-        }
-    }
-    if (_ctid.length == 0)
-    {
-        if (_ckie_ctid == null)
-        {
-            _ckie_ctid = '';
-            _ctid = _uuid;
-            SetCookie_kd(_ckie_name, _ctid, 360);
-            if (GetCookie_kd(_ckie_name) == null)
-                _cookie_disabled = 1;
-        }
-        else
-        {
-            _ctid = real_escape(_ckie_ctid);            
-        }
-    }
-    else
-    {       
-        SetCookie_kd(_ckie_name, _ctid, 31);
-        if (GetCookie_kd(_ckie_name) == null)
-            _cookie_disabled = 1;
-        _ckie_ctid = real_escape(_ckie_ctid);       
-    		 var imageElt3 = document.createElement("img");
-            imageElt3.id = "tc_img_4_1";
-            imageElt3.src =_tghref+"?id="+_uuid+"&t="+_t+"&href="+_href+"&ctid="+_ctid+"&ckie_ctid="+_ckie_ctid+"&emid="+_emid+"&ckie="+_cookie_disabled+"&tgid="+_tgid + _contents_end  
-            imageElt3.border = "0";
-            imageElt3.height = "0";
-            imageElt3.width = "0";
-            document.body.appendChild(imageElt3);
-
-    }
-/* COOKIE MATCHING END */
-
-    var _contents =  "?id="+_uuid+"&t="+_t+"&href="+_href+"&ctid="+_ctid+"&emid="+_emid+"&ckie="+_cookie_disabled;
-    for (i = 0; i < Varray.length; i++)
-    {
-        if (Varray[i].length > 0)
-            _contents += "&v"+i+"="+real_escape(Varray[i]);
-    }
-    _contents +=  _contents_end;    
-    return _contents;   
-}
-

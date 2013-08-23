@@ -47,6 +47,7 @@ func LoaderHandler (w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["domain"] = "jonathanschmidt.fr:9090"
 	data["name"] = "visite"
+	data["prefix"] = "gotag_"
 	loader.Execute(w,data)
 }
 
