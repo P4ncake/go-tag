@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/sbinet/go-config/config"
 	"labix.org/v2/mgo"
 	"net/http"
 	"text/template"
 	"time"
-	"github.com/sbinet/go-config/config"
 )
 
 /* ********************************************
@@ -34,7 +34,7 @@ func main() {
 	Getconf()
 
 	// DB Connection
-	session, err  := mgo.Dial(dbhost)
+	session, err := mgo.Dial(dbhost)
 	if err != nil {
 		panic(err)
 	}
@@ -62,17 +62,16 @@ func Getconf() {
 	c, _ := config.ReadDefault("go-tag.cfg")
 
 	// Get configuration variables
-	baseUrl, _ = c.String("default","base-url")
-	port, _ = c.String("default","port")
-	loaderName, _ = c.String("default","loader-name")
-	loaderUrl, _  = c.String("default","loader-url")
-	tagName, _ = c.String("default","tag-name")
-	tagUrl, _ = c.String("default","tag-url")
-	database, _ = c.String("default","database")
-	collection, _ = c.String("default","collection")
-	dbhost, _ = c.String("default","dbhost")
+	baseUrl, _ = c.String("default", "base-url")
+	port, _ = c.String("default", "port")
+	loaderName, _ = c.String("default", "loader-name")
+	loaderUrl, _ = c.String("default", "loader-url")
+	tagName, _ = c.String("default", "tag-name")
+	tagUrl, _ = c.String("default", "tag-url")
+	database, _ = c.String("default", "database")
+	collection, _ = c.String("default", "collection")
+	dbhost, _ = c.String("default", "dbhost")
 }
-
 
 func TagHandler(w http.ResponseWriter, r *http.Request) {
 	m := make(map[string][]string)
