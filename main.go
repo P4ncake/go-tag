@@ -2,100 +2,112 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"github.com/sbinet/go-config/config"
-	"labix.org/v2/mgo"
+	"log"
+	"github.com/go-martini/martini"
+	"github.com/martini-contrib/render"
+	"code.google.com/p/gcfg"
 	"net/http"
-	"text/template"
+	"labix.org/v2/mgo"
 	"time"
 )
 
-/* ********************************************
- *            VARIABLES GLOBALES              *
- * ********************************************/
-var collection string
-var database string
-var baseUrl string
-var loaderName string
-var loaderUrl string
-var tagName string
-var tagUrl string
-var port string
-var dbhost string
+type Config struct {
+	Server struct {
+		Active bool
+		Host string
+		Port string
+		DbHost string
+		Database string
+		Collections []string
+		UrlPrefix string
+	}
+
+	Tag struct {
+		Active bool
+		Host string
+		Port string
+		Name string
+		Url string
+	}
+
+}
+
+/*
+ * Global vars
+ */
 
 var db *mgo.Collection
+var cfg Config
 
-/* ********************************************
- *                FUNCTIONS                   *
- * ********************************************/
+var server = flag.Bool("s",false,"Server Bool")
+var tag = flag.Bool("t",false,"Tag Bool")
+/*
+ * Init config
+ */
+
+func Init() {
+	err := gcfg.ReadFileInto(&cfg,"go-tag.ini")
+	if  err != nil {
+		log.Print(err)
+	}
+//	&cfg.Tag.Active = flag.Bool("t",false,"Tag Bool")
+	log.Print(cfg)
+}
 
 func main() {
+	Init()
+	m := martini.Classic()
+	m.Use(martini.Recovery())
+	flag.Parse()
 
-	Getconf()
+	if *server {
+		m.Get(cfg.Server.UrlPrefix+":database/:collection", Server)
+	}
 
-	// DB Connection
-	session, err := mgo.Dial(dbhost)
+	m.Use(render.Renderer(render.Options{
+		HTMLContentType: "application/javascript",
+	}))
+
+	if *tag {
+		m.Get(cfg.Tag.Url, func (r render.Render) {
+			r.HTML(200,cfg.Tag.Name,&cfg.Tag)
+		})
+	}
+	m.Run()
+}
+
+func Server(params martini.Params, r *http.Request) (int, string){
+	m := r.URL.Query()
+	var v = false
+	if params["database"] != cfg.Server.Database {
+		return http.StatusNotFound, "404 page not found"
+	}
+	for _,c := range cfg.Server.Collections {
+		if c ==  params["collection"] {
+			v = true
+			go Insertdata(params["client"],params["collection"],m)
+		}
+	}
+	if !v {
+		return http.StatusNotFound, "404 page not found"
+	}
+	return http.StatusOK, ""
+}
+
+func Insertdata(client string, collection string, m map[string][]string) {
+
+	session, err := mgo.Dial(cfg.Server.DbHost)
 	if err != nil {
-		panic(err)
+		log.Print(err)
 	}
 	defer session.Close()
-	db = session.DB(database).C(collection)
-
-	// Here goes the magic
-	flag.Parse()
-	listenport := fmt.Sprint(":", port)
-	fmt.Println("Listening ", listenport)
-
-	if tagUrl != "" {
-		http.HandleFunc(tagUrl, TagHandler)
-	}
-	if loaderUrl != "" {
-		http.HandleFunc(loaderUrl, LoaderHandler)
-	}
-
-	http.ListenAndServe(listenport, nil)
-}
-
-func Getconf() {
-
-	// Reading configuration file
-	c, _ := config.ReadDefault("go-tag.cfg")
-
-	// Get configuration variables
-	baseUrl, _ = c.String("default", "base-url")
-	port, _ = c.String("default", "port")
-	loaderName, _ = c.String("default", "loader-name")
-	loaderUrl, _ = c.String("default", "loader-url")
-	tagName, _ = c.String("default", "tag-name")
-	tagUrl, _ = c.String("default", "tag-url")
-	database, _ = c.String("default", "database")
-	collection, _ = c.String("default", "collection")
-	dbhost, _ = c.String("default", "dbhost")
-}
-
-func TagHandler(w http.ResponseWriter, r *http.Request) {
-	m := make(map[string][]string)
-	m = r.URL.Query()
-	go Insertdata(m)
-	return
-}
-
-func LoaderHandler(w http.ResponseWriter, r *http.Request) {
-	loader, _ := template.ParseFiles("templates/loader.tmpl")
-	data := make(map[string]interface{})
-	data["domain"] = "jonathanschmidt.fr:9090"
-	data["name"] = "visite"
-	data["prefix"] = "gotag_"
-	loader.Execute(w, data)
-}
-
-func Insertdata(m map[string][]string) {
+	db = session.DB(client).C(collection)
 	if len(m) != 0 {
 		m["insert_date"] = []string{time.Now().Format("2006-01-02 15:04:05")}
 		m["source"] = []string{"GoTag"}
 		err := db.Insert(m)
 		if err != nil {
-			panic(err)
+			log.Print(err)
 		}
 	}
 }
