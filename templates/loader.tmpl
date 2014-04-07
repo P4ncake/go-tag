@@ -6,7 +6,7 @@
  * Global vars
  */
 var domain_site = window.location.hostname
-var domain = "{{.domain}}"
+var domain = "{{.Host}}"
 
 function gotag_setcookie(name,value,days,path,domain) {
 	domain = domain.split(".");
@@ -46,7 +46,7 @@ function gotag_genid() {
 }
 
 function gotag_contents(url, annonceur, name, Varray) {
-	var _cookie_name ='{{.prefix}}{{.name}}';
+	var _cookie_name ='test_{{.Name}}';
 	var _id = _id2 = _date = _mime_types =_plugins = new String();
 
 	var _href = window.location.protocol + "//" + domain_site + window.location.pathname;
