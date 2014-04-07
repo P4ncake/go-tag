@@ -1,35 +1,34 @@
 package main
 
 import (
+	"code.google.com/p/gcfg"
 	"flag"
-	"log"
 	"github.com/go-martini/martini"
 	"github.com/martini-contrib/render"
-	"code.google.com/p/gcfg"
-	"net/http"
 	"labix.org/v2/mgo"
+	"log"
+	"net/http"
 	"time"
 )
 
 type Config struct {
 	Server struct {
-		Active bool
-		Host string
-		Port string
-		DbHost string
-		Database string
+		Active      bool
+		Host        string
+		Port        string
+		DbHost      string
+		Database    string
 		Collections []string
-		UrlPrefix string
+		UrlPrefix   string
 	}
 
 	Tag struct {
 		Active bool
-		Host string
-		Port string
-		Name string
-		Url string
+		Host   string
+		Port   string
+		Name   string
+		Url    string
 	}
-
 }
 
 /*
@@ -39,18 +38,19 @@ type Config struct {
 var db *mgo.Collection
 var cfg Config
 
-var server = flag.Bool("s",false,"Server Bool")
-var tag = flag.Bool("t",false,"Tag Bool")
+var server = flag.Bool("s", false, "Server Bool")
+var tag = flag.Bool("t", false, "Tag Bool")
+
 /*
  * Init config
  */
 
 func Init() {
-	err := gcfg.ReadFileInto(&cfg,"go-tag.ini")
-	if  err != nil {
+	err := gcfg.ReadFileInto(&cfg, "go-tag.ini")
+	if err != nil {
 		log.Print(err)
 	}
-//	&cfg.Tag.Active = flag.Bool("t",false,"Tag Bool")
+	//	&cfg.Tag.Active = flag.Bool("t",false,"Tag Bool")
 	log.Print(cfg)
 }
 
@@ -69,23 +69,23 @@ func main() {
 	}))
 
 	if *tag {
-		m.Get(cfg.Tag.Url, func (r render.Render) {
-			r.HTML(200,cfg.Tag.Name,&cfg.Tag)
+		m.Get(cfg.Tag.Url, func(r render.Render) {
+			r.HTML(200, cfg.Tag.Name, &cfg.Tag)
 		})
 	}
 	m.Run()
 }
 
-func Server(params martini.Params, r *http.Request) (int, string){
+func Server(params martini.Params, r *http.Request) (int, string) {
 	m := r.URL.Query()
 	var v = false
 	if params["database"] != cfg.Server.Database {
 		return http.StatusNotFound, "404 page not found"
 	}
-	for _,c := range cfg.Server.Collections {
-		if c ==  params["collection"] {
+	for _, c := range cfg.Server.Collections {
+		if c == params["collection"] {
 			v = true
-			go Insertdata(params["client"],params["collection"],m)
+			go Insertdata(params["client"], params["collection"], m)
 		}
 	}
 	if !v {
